@@ -250,7 +250,7 @@ class Isucon2App < Sinatra::Base
       r.lpush("recent","#{seat_id},#{artist_name},#{ticket_name},#{variation_name}")
 
       r.decr("count:variations:#{variation_id}")
-      r.decr("count:tickets:#{key.split(":")[1]}")
+      r.decr("count:tickets:#{key.split(":")[2]}")
 
       seat_id
 
