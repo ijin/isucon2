@@ -9,16 +9,30 @@ class Isucon2App < Sinatra::Base
   set :slim, :pretty => true, :layout => true
 
   helpers do
-    def connection
-      config = JSON.parse(IO.read(File.dirname(__FILE__) + "/../config/common.#{ ENV['ISUCON_ENV'] || 'local' }.json"))['database']
-      Mysql2::Client.new(
-        :host => config['host'],
-        :port => config['port'],
-        :username => config['username'],
-        :password => config['password'],
-        :database => config['dbname'],
+    def ensure_configured
+      @config ||= nil
+
+      return if @config
+
+      @config = JSON.parse(IO.read(File.dirname(__FILE__) + "/../config/common.#{ ENV['ISUCON_ENV'] || 'local' }.json"))
+
+      @mysql_connection = Mysql2::Client.new(
+        :host => @config['database']['host'],
+        :port => @config['database']['port'],
+        :username => @config['database']['username'],
+        :password => @config['database']['password'],
+        :database => @config['database']['dbname'],
         :reconnect => true,
       )
+
+      Resque.redis = @config['redis']
+
+      @config
+    end
+
+    def connection
+      ensure_configured
+      @mysql_connection
     end
 
     # artists: id, name
@@ -28,6 +42,7 @@ class Isucon2App < Sinatra::Base
     # variation: id, name, ticket_id
 
     def r
+      ensure_configured
       Resque.redis
     end
 
