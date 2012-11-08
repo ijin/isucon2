@@ -243,6 +243,8 @@ class Isucon2App < Sinatra::Base
 
       seat_id = r.rpoplpush("notbought:#{variation_id}", "bought:#{variation_id}:#{member_id}:#{Time.now.to_i}")
 
+      return nil unless seat_id
+
       key = r.keys("info:*:*:#{variation_id}").first
       artist_name, ticket_name, variation_name = r.get(key).split(",")
       r.lpush("recent","#{seat_id},#{artist_name},#{ticket_name},#{variation_name}")
